@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simulador de Prueba Rápida</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="startScreen" class="start-screen">
+        <div class="start-copy">
+          <p class="eyebrow">Banco de 50 preguntas</p>
+          <h1>Simulador de prueba rápida</h1>
+          <p>Responde 20 preguntas al azar en 10 minutos. Puedes marcar dudas, avanzar libremente y revisar tus respuestas al finalizar.</p>
+        </div>
+        <div class="start-actions">
+          <label for="nameInput">¿Cuál es tu nombre?</label>
+          <input id="nameInput" type="text" autocomplete="name" placeholder="Ej.: Emerson">
+          <button id="startBtn" class="primary-btn">Comenzar prueba</button>
+        </div>
+      </section>
+
+      <section id="testScreen" class="test-screen hidden">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Prueba rápida</p>
+            <h1>20 preguntas</h1>
+          </div>
+          <div class="timer-box" aria-live="polite">
+            <span>Tiempo</span>
+            <strong id="timer">10:00</strong>
+          </div>
+        </header>
+
+        <section class="progress-area" aria-label="Progreso de la prueba">
+          <div class="progress-meta">
+            <span id="progressText">0 de 20 respondidas</span>
+            <span id="questionPosition">Pregunta 1 de 20</span>
+          </div>
+          <div class="progress-track">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+        </section>
+
+        <div class="layout">
+          <aside class="board-panel">
+            <h2>Tablero</h2>
+            <div id="questionBoard" class="question-board"></div>
+            <div class="legend">
+              <span><i class="dot current"></i>Actual</span>
+              <span><i class="dot answered"></i>Respondida</span>
+              <span><i class="dot marked"></i>Marcada</span>
+            </div>
+          </aside>
+
+          <section class="question-panel">
+            <div class="question-head">
+              <p id="sourceQuestion" class="source-question"></p>
+              <button id="markBtn" class="ghost-btn small-btn">Marcar para revisar</button>
+            </div>
+            <h2 id="questionText"></h2>
+            <div id="optionsList" class="options-list"></div>
+            <nav class="controls" aria-label="Navegación de preguntas">
+              <button id="prevBtn" class="ghost-btn">Anterior</button>
+              <button id="nextBtn" class="ghost-btn">Siguiente</button>
+              <button id="gradeBtn" class="primary-btn">Calificar prueba</button>
+              <button id="restartBtn" class="danger-btn">Rehacer prueba</button>
+            </nav>
+          </section>
+        </div>
+      </section>
+
+      <section id="resultsScreen" class="results-screen hidden" aria-live="polite">
+        <div id="timeoutNotice" class="notice hidden">El tiempo terminó. La prueba fue calificada automáticamente.</div>
+        <div class="results-summary">
+          <div>
+            <p class="eyebrow">Resultado</p>
+            <h2 id="resultStatus"></h2>
+          </div>
+          <div class="score-grid">
+            <div><span>Puntaje</span><strong id="scoreText"></strong></div>
+            <div><span>Porcentaje</span><strong id="percentText"></strong></div>
+            <div><span>Nota</span><strong id="gradeText"></strong></div>
+            <div><span>Tiempo usado</span><strong id="usedTimeText"></strong></div>
+          </div>
+        </div>
+        <div class="review-tools">
+          <button id="showAllBtn" class="ghost-btn active-filter">Todas</button>
+          <button id="showWrongBtn" class="ghost-btn">Solo incorrectas</button>
+          <button id="newTestBtn" class="primary-btn">Nueva prueba</button>
+        </div>
+        <div id="reviewList" class="review-list"></div>
+      </section>
+    </main>
+
+    <script src="question-bank.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
