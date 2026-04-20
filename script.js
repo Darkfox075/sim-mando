@@ -1,13 +1,15 @@
-﻿const TEST_SIZE = 20;
-const TEST_SECONDS = 10 * 60;
+const QUICK_TEST_SIZE = 20;
+const QUICK_TEST_SECONDS = 10 * 60;
+const FULL_TEST_SIZE = 50;
+const FULL_TEST_SECONDS = 20 * 60;
 const PASS_PERCENT = 60;
-const STORAGE_KEY = "simulador_prueba_rapida_v3";
+const STORAGE_KEY = "simulador_prueba_rapida_v4";
 const NAME_STORAGE_KEY = "simulador_prueba_rapida_nombre";
 
 // La funcionalidad del simulador usa el banco cargado desde question-bank.js.
 const questionBank = window.QUESTION_BANK;
 
-if (!Array.isArray(questionBank) || questionBank.length < TEST_SIZE) {
+if (!Array.isArray(questionBank) || questionBank.length < FULL_TEST_SIZE) {
   throw new Error("El banco de preguntas no esta cargado o tiene menos preguntas que las requeridas.");
 }
 
@@ -17,8 +19,11 @@ const els = {
   resultsScreen: document.querySelector("#resultsScreen"),
   nameInput: document.querySelector("#nameInput"),
   startBtn: document.querySelector("#startBtn"),
+  startFullBtn: document.querySelector("#startFullBtn"),
   timer: document.querySelector("#timer"),
   timerBox: document.querySelector(".timer-box"),
+  testModeLabel: document.querySelector("#testModeLabel"),
+  testTitle: document.querySelector("#testTitle"),
   progressText: document.querySelector("#progressText"),
   questionPosition: document.querySelector("#questionPosition"),
   progressBar: document.querySelector("#progressBar"),
@@ -56,19 +61,41 @@ function shuffle(items, random = Math.random) {
   return copy;
 }
 
-function createAttempt(participantName = "") {
+function getModeConfig(mode) {
+  if (mode === "full") {
+    return {
+      mode: "full",
+      label: "Prueba 50 preguntas",
+      size: FULL_TEST_SIZE,
+      seconds: FULL_TEST_SECONDS
+    };
+  }
+
+  return {
+    mode: "quick",
+    label: "Prueba rápida",
+    size: QUICK_TEST_SIZE,
+    seconds: QUICK_TEST_SECONDS
+  };
+}
+
+function createAttempt(participantName = "", mode = "quick") {
+  const config = getModeConfig(mode);
   const random = Math.random;
-  const selected = shuffle(questionBank, random).slice(0, TEST_SIZE).map((question) => ({
+  const selected = shuffle(questionBank, random).slice(0, config.size).map((question) => ({
     ...question,
     shuffledOptions: shuffle(question.options, random)
   }));
 
   return {
+    mode: config.mode,
+    modeLabel: config.label,
+    totalSeconds: config.seconds,
     questions: selected,
-    answers: Array(TEST_SIZE).fill(null),
-    marked: Array(TEST_SIZE).fill(false),
+    answers: Array(config.size).fill(null),
+    marked: Array(config.size).fill(false),
     currentIndex: 0,
-    remainingSeconds: TEST_SECONDS,
+    remainingSeconds: config.seconds,
     startedAt: Date.now(),
     graded: false,
     timedOut: false,
@@ -169,9 +196,10 @@ function renderBoard() {
 
 function renderProgress() {
   const count = answeredCount();
-  els.progressText.textContent = `${count} de ${TEST_SIZE} respondidas`;
-  els.questionPosition.textContent = `Pregunta ${state.currentIndex + 1} de ${TEST_SIZE}`;
-  els.progressBar.style.width = `${(count / TEST_SIZE) * 100}%`;
+  const total = state.questions.length;
+  els.progressText.textContent = `${count} de ${total} respondidas`;
+  els.questionPosition.textContent = `Pregunta ${state.currentIndex + 1} de ${total}`;
+  els.progressBar.style.width = `${(count / total) * 100}%`;
 }
 
 function renderQuestion() {
@@ -205,25 +233,28 @@ function renderQuestion() {
 
   els.markBtn.textContent = state.marked[state.currentIndex] ? "Quitar marca" : "Marcar para revisar";
   els.prevBtn.disabled = state.currentIndex === 0;
-  els.nextBtn.disabled = state.currentIndex === TEST_SIZE - 1;
-  els.gradeBtn.classList.toggle("hidden", state.currentIndex !== TEST_SIZE - 1);
-  els.restartBtn.classList.toggle("hidden", state.currentIndex !== TEST_SIZE - 1);
+  const lastQuestionIndex = state.questions.length - 1;
+  els.nextBtn.disabled = state.currentIndex === lastQuestionIndex;
+  els.gradeBtn.classList.toggle("hidden", state.currentIndex !== lastQuestionIndex);
+  els.restartBtn.classList.toggle("hidden", state.currentIndex !== lastQuestionIndex);
   els.gradeBtn.disabled = state.graded;
 }
 
 function renderTest() {
   if (!state) return;
   showScreen("test");
+  els.testModeLabel.textContent = state.modeLabel;
+  els.testTitle.textContent = `${state.questions.length} preguntas`;
   renderTimer();
   renderProgress();
   renderBoard();
   renderQuestion();
 }
 
-function startNewAttempt() {
+function startNewAttempt(mode = "quick") {
   const participantName = els.nameInput.value.trim() || "Estudiante";
   localStorage.setItem(NAME_STORAGE_KEY, participantName);
-  state = createAttempt(participantName);
+  state = createAttempt(participantName, mode);
   clearSavedState();
   renderTest();
   startTimer();
@@ -239,7 +270,7 @@ function requestRestart() {
   const hasProgress = answeredCount() > 0 || state.marked.some(Boolean);
   if (hasProgress && !window.confirm("Se borrará el intento actual. ¿Quieres rehacer la prueba?")) return;
   stopTimer();
-  startNewAttempt();
+  startNewAttempt(state.mode);
 }
 
 function gradeTest(timedOut = false) {
@@ -259,10 +290,11 @@ function gradeTest(timedOut = false) {
 }
 
 function scoreAttempt() {
+  const totalQuestions = state.questions.length;
   const correct = state.questions.reduce((total, item, index) => total + (state.answers[index] === item.answer ? 1 : 0), 0);
   const unanswered = state.answers.filter((answer) => !answer).length;
-  const incorrect = TEST_SIZE - correct - unanswered;
-  const percent = Math.round((correct / TEST_SIZE) * 100);
+  const incorrect = totalQuestions - correct - unanswered;
+  const percent = Math.round((correct / totalQuestions) * 100);
   return { correct, incorrect, unanswered, percent };
 }
 
@@ -270,14 +302,14 @@ function renderResults() {
   showScreen("results");
   const score = scoreAttempt();
   const passed = score.percent >= PASS_PERCENT;
-  const usedSeconds = TEST_SECONDS - state.remainingSeconds;
+  const usedSeconds = state.totalSeconds - state.remainingSeconds;
   const participantName = state.participantName || "Estudiante";
 
   els.timeoutNotice.classList.toggle("hidden", !state.timedOut);
   els.timeoutNotice.textContent = `${participantName}, el tiempo terminó. La prueba fue calificada automáticamente.`;
   els.resultStatus.textContent = `${participantName}, resultado: ${passed ? "Aprobado" : "Reprobado"}`;
   els.resultStatus.style.color = passed ? "var(--green)" : "var(--red)";
-  els.scoreText.textContent = `${score.correct}/${TEST_SIZE}`;
+  els.scoreText.textContent = `${score.correct}/${state.questions.length}`;
   els.percentText.textContent = `${score.percent}%`;
   els.gradeText.textContent = estimateGrade(score.percent);
   els.usedTimeText.textContent = formatTime(usedSeconds);
@@ -323,14 +355,15 @@ function setReviewFilter(filter) {
   renderReviewList();
 }
 
-els.startBtn.addEventListener("click", startNewAttempt);
+els.startBtn.addEventListener("click", () => startNewAttempt("quick"));
+els.startFullBtn.addEventListener("click", () => startNewAttempt("full"));
 els.prevBtn.addEventListener("click", () => {
   state.currentIndex = Math.max(0, state.currentIndex - 1);
   renderTest();
   saveState();
 });
 els.nextBtn.addEventListener("click", () => {
-  state.currentIndex = Math.min(TEST_SIZE - 1, state.currentIndex + 1);
+  state.currentIndex = Math.min(state.questions.length - 1, state.currentIndex + 1);
   renderTest();
   saveState();
 });

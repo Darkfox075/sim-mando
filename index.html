@@ -12,20 +12,21 @@
         <div class="start-copy">
           <p class="eyebrow">Banco de 50 preguntas</p>
           <h1>Simulador de prueba rápida</h1>
-          <p>Responde 20 preguntas al azar en 10 minutos. Puedes marcar dudas, avanzar libremente y revisar tus respuestas al finalizar.</p>
+          <p>Responde una prueba rápida de 20 preguntas en 10 minutos o enfrenta la prueba completa de 50 preguntas en modo muerte súbita con 20 minutos. Puedes marcar dudas, avanzar libremente y revisar tus respuestas al finalizar.</p>
         </div>
         <div class="start-actions">
           <label for="nameInput">¿Cuál es tu nombre?</label>
           <input id="nameInput" type="text" autocomplete="name" placeholder="Ej.: Emerson">
-          <button id="startBtn" class="primary-btn">Comenzar prueba</button>
+          <button id="startBtn" class="primary-btn">Comenzar prueba rápida</button>
+          <button id="startFullBtn" class="ghost-btn">Comenzar Prueba 50 preguntas</button>
         </div>
       </section>
 
       <section id="testScreen" class="test-screen hidden">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Prueba rápida</p>
-            <h1>20 preguntas</h1>
+            <p id="testModeLabel" class="eyebrow">Prueba rápida</p>
+            <h1 id="testTitle">20 preguntas</h1>
           </div>
           <div class="timer-box" aria-live="polite">
             <span>Tiempo</span>
