@@ -181,6 +181,19 @@ button:disabled {
   color: var(--teal);
 }
 
+#startFullBtn {
+  border-color: #d45b4f;
+  background: linear-gradient(180deg, #9f1d1d, #5f0f0f);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(95, 15, 15, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+#startFullBtn:hover {
+  border-color: #ef7a70;
+  background: linear-gradient(180deg, #b42318, #741414);
+  color: #fff;
+}
+
 .danger-btn {
   background: #fff2ee;
   color: var(--red);
